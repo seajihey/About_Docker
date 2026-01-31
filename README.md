@@ -4,12 +4,12 @@
 
 ### 컴퓨팅 자원 관리의 진화
 
-| 시대 | 기술 | 특징 | 한계 |
-|------|------|------|------|
-| 1세대 | Bare Metal | 물리 서버 직접 운영 | 자원 낭비, 확장 어려움 |
-| 2세대 | VM (가상머신) | 하이퍼바이저 기반 격리 | OS 전체 복제로 인한 무거움 |
-| 3세대 | LXC | 커널 공유 기반 컨테이너 | 설정 복잡성 |
-| 4세대 | Docker | 표준화된 컨테이너 | **오늘의 주제** |
+| 시대  | 기술          | 특징                    | 한계                       |
+| ----- | ------------- | ----------------------- | -------------------------- |
+| 1세대 | Bare Metal    | 물리 서버 직접 운영     | 자원 낭비, 확장 어려움     |
+| 2세대 | VM (가상머신) | 하이퍼바이저 기반 격리  | OS 전체 복제로 인한 무거움 |
+| 3세대 | LXC           | 커널 공유 기반 컨테이너 | 설정 복잡성                |
+| 4세대 | Docker        | 표준화된 컨테이너       | **오늘의 주제**            |
 
 ### 문제 제기
 
@@ -46,10 +46,10 @@ CMD ["node", "server.js"]
 
 Docker 컨테이너의 격리는 Linux 커널의 두 가지 핵심 기능에 의존합니다.
 
-| 기술 | 역할 | 격리 대상 |
-|------|------|-----------|
+| 기술          | 역할          | 격리 대상                    |
+| ------------- | ------------- | ---------------------------- |
 | **Namespace** | 프로세스 격리 | PID, Network, Mount, User 등 |
-| **cgroups** | 자원 제한 | CPU, Memory, I/O |
+| **cgroups**   | 자원 제한     | CPU, Memory, I/O             |
 
 이 두 기술 덕분에 컨테이너는 VM 없이도 완전한 격리 환경을 제공합니다.
 
@@ -116,13 +116,13 @@ RUN apt-get update \
 
 베이스 이미지 선택만으로 **10배 이상의 용량 차이**가 발생합니다.
 
-| 베이스 이미지 | 크기 | 특징 | 적합한 경우 |
-|---------------|------|------|-------------|
-| `ubuntu:22.04` | ~77MB | 풀 패키지, 디버깅 용이 | 개발/테스트 환경 |
-| `node:18` | ~1GB | 개발 도구 포함 | 빌드 스테이지 |
-| `node:18-alpine` | ~180MB | musl libc 기반, 경량 | 대부분의 프로덕션 |
-| `node:18-slim` | ~240MB | glibc 기반, 일부 도구 제거 | Alpine 호환 이슈 시 |
-| `gcr.io/distroless/nodejs18` | ~120MB | 쉘 없음, 최소 런타임 | 보안 중시 프로덕션 |
+| 베이스 이미지                | 크기   | 특징                       | 적합한 경우         |
+| ---------------------------- | ------ | -------------------------- | ------------------- |
+| `ubuntu:22.04`               | ~77MB  | 풀 패키지, 디버깅 용이     | 개발/테스트 환경    |
+| `node:18`                    | ~1GB   | 개발 도구 포함             | 빌드 스테이지       |
+| `node:18-alpine`             | ~180MB | musl libc 기반, 경량       | 대부분의 프로덕션   |
+| `node:18-slim`               | ~240MB | glibc 기반, 일부 도구 제거 | Alpine 호환 이슈 시 |
+| `gcr.io/distroless/nodejs18` | ~120MB | 쉘 없음, 최소 런타임       | 보안 중시 프로덕션  |
 
 ```dockerfile
 # Before: 1GB 이상
@@ -137,46 +137,64 @@ FROM node:18-alpine
 빌드 환경과 실행 환경을 **완전히 분리**합니다.
 
 ```dockerfile
-# ==================== Stage 1: Builder ====================
-FROM node:18 AS builder
+# ----- Build Stage -----
+FROM eclipse-temurin:17-jdk AS builder
+
 WORKDIR /app
 
-# 의존성 설치 (빌드 도구 포함)
-COPY package*.json ./
-RUN npm ci
+# Gradle Wrapper 복사 (캐시 활용)
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
 
-# 애플리케이션 빌드
-COPY . .
-RUN npm run build
+# 의존성 파일 복사 및 다운로드 (캐시 활용)
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
 
-# ==================== Stage 2: Production ====================
-FROM node:18-alpine AS production
+# 소스 코드 복사 및 빌드
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ----- Runtime Stage -----
+FROM eclipse-temurin:17-jdk
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - Multi-stage Build"
+LABEL version="1.0.0"
+
 WORKDIR /app
 
-# 프로덕션 의존성만 설치
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+# 빌드된 JAR만 복사
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
 
-# 빌드 결과물만 복사
-COPY --from=builder /app/dist ./dist
+# 비root 사용자 생성
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+USER appuser
 
-# 비root 사용자로 실행
-USER node
-CMD ["node", "dist/server.js"]
+EXPOSE 8082
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-**결과 비교**:
+**실행 결과**:
+
+<img src="image1.png" width="600" alt="Multi-Stage Build1">
+<img src="image2.png" width="600" alt="Multi-Stage Build2">
+<img src="image3.png" width="600" alt="Multi-Stage Build3">
+
+- 빌드 스테이지 (image2.png): BUILD SUCCESSFUL in 45s
+
+- 실행 스테이지 (image3.png): BUILD SUCCESSFUL in 24s
+
+- 총 빌드시간 : 69s
+
+**메모리 비교**:
 
 ```bash
-# 단일 스테이지
-$ docker images myapp:single
-REPOSITORY   TAG      SIZE
-myapp        single   847MB
 
-# 멀티 스테이지
-$ docker images myapp:multi
-REPOSITORY   TAG      SIZE
-myapp        multi    127MB   # 85% 감소!
+~/About_Docker$ docker images | grep bookshelf
+bookshelf          basic        010fde44c852   10 seconds ago      770MB
+bookshelf          multistage   945123b65431   About an hour ago   484MB
 ```
 
 ### 전략 3: 레이어 캐싱 최적화 (The Order)
@@ -234,11 +252,11 @@ Step 5/6 : COPY . .
 
 ### CI 단계: 빌드 시간 감소
 
-| 지표 | 최적화 전 | 최적화 후 | 개선율 |
-|------|-----------|-----------|--------|
-| 초기 빌드 | 8분 | 3분 | 62% ↓ |
-| 코드 변경 후 재빌드 | 8분 | 45초 | **91% ↓** |
-| 이미지 크기 | 847MB | 127MB | 85% ↓ |
+| 지표                | 최적화 전 | 최적화 후 | 개선율    |
+| ------------------- | --------- | --------- | --------- |
+| 초기 빌드           | 8분       | 3분       | 62% ↓     |
+| 코드 변경 후 재빌드 | 8분       | 45초      | **91% ↓** |
+| 이미지 크기         | 847MB     | 127MB     | 85% ↓     |
 
 **개발자 생산성 향상**: 하루 10번 빌드 × 7분 절약 = **일 70분 절약**
 
