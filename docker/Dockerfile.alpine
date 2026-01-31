@@ -1,0 +1,46 @@
+# ==============================================================================
+# Stage 4: Alpine Linux Base
+# 예상 크기: ~200MB
+# 개선점: Alpine 리눅스 사용 (경량 OS)
+# ==============================================================================
+
+# ----- Build Stage -----
+FROM eclipse-temurin:17-jdk-alpine AS builder
+
+WORKDIR /app
+
+# Gradle Wrapper 복사
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 의존성 다운로드
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 빌드
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ----- Runtime Stage (Alpine JRE) -----
+FROM eclipse-temurin:17-jre-alpine
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - Alpine Linux"
+LABEL version="1.0.0"
+
+WORKDIR /app
+
+# JAR 복사
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+
+# Alpine에서는 addgroup/adduser 사용
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# JVM 컨테이너 지원 옵션
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

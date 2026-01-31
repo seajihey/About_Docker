@@ -1,0 +1,32 @@
+version: '3.8'
+
+# 로컬 개발 환경용 - MySQL만 실행
+# 사용법: docker-compose -f docker-compose.local.yml up -d
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bookshelf-mysql-local
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_local_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_local_data:

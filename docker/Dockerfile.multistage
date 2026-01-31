@@ -1,0 +1,43 @@
+# ==============================================================================
+# Stage 2: Multi-stage Build
+# 예상 크기: ~350MB
+# 개선점: 빌드 도구와 런타임 분리
+# ==============================================================================
+
+# ----- Build Stage -----
+FROM eclipse-temurin:17-jdk AS builder
+
+WORKDIR /app
+
+# Gradle Wrapper 복사 (캐시 활용)
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 의존성 파일 복사 및 다운로드 (캐시 활용)
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 소스 코드 복사 및 빌드
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ----- Runtime Stage -----
+FROM eclipse-temurin:17-jdk
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - Multi-stage Build"
+LABEL version="1.0.0"
+
+WORKDIR /app
+
+# 빌드된 JAR만 복사
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+
+# 비root 사용자 생성
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

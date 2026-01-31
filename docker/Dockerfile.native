@@ -1,0 +1,54 @@
+# ==============================================================================
+# Stage 6: GraalVM Native Image
+# 예상 크기: ~80MB
+# 개선점: AOT 컴파일로 JVM 없이 실행 가능한 바이너리 생성
+# 주의: 빌드 시간이 오래 걸림 (5-15분), 메모리 8GB 이상 권장
+# ==============================================================================
+
+# ----- Build Stage -----
+FROM ghcr.io/graalvm/native-image-community:17 AS builder
+
+WORKDIR /app
+
+# Gradle Wrapper 복사
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 의존성 다운로드
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 소스 복사
+COPY src src
+
+# Native Image 빌드를 위한 AOT 처리 힌트 생성
+# Spring Boot 3.x는 Native Image 지원 내장
+RUN ./gradlew nativeCompile --no-daemon -x test || \
+    ./gradlew bootJar --no-daemon -x test
+
+# ----- Runtime Stage -----
+FROM alpine:3.19
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - GraalVM Native Image"
+LABEL version="1.0.0"
+
+# 필수 라이브러리
+RUN apk add --no-cache ca-certificates tzdata gcompat
+
+WORKDIR /app
+
+# Native 바이너리 또는 JAR 복사
+COPY --from=builder /app/build/native/nativeCompile/bookshelf ./bookshelf 2>/dev/null || \
+     COPY --from=builder /app/build/libs/bookshelf.jar ./bookshelf.jar
+
+# 비root 사용자
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+USER appuser
+
+EXPOSE 8080
+
+# Native 바이너리 실행 (또는 JAR fallback)
+ENTRYPOINT ["./bookshelf"]

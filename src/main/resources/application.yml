@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: bookshelf
+
+  profiles:
+    active: local
+
+  # JPA 공통 설정
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /api-docs
+  show-actuator: true
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
