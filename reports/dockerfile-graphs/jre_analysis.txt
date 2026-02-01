@@ -1,0 +1,28 @@
+========================================
+DOCKERFILE ANALYSIS: Dockerfile.jre
+========================================
+
+--- Stages ---
+8:FROM eclipse-temurin:17-jdk AS builder
+26:FROM eclipse-temurin:17-jre
+
+--- Key Instructions ---
+13:COPY gradlew .
+14:COPY gradle gradle
+15:RUN chmod +x ./gradlew
+18:COPY build.gradle settings.gradle ./
+19:RUN ./gradlew dependencies --no-daemon || true
+22:COPY src src
+23:RUN ./gradlew bootJar --no-daemon -x test
+35:COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+38:RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+42:ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+44:EXPOSE 8080
+46:ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
+--- Statistics ---
+Total lines: 46
+FROM statements: 2
+RUN statements: 4
+COPY statements: 5
+

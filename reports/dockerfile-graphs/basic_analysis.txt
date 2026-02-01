@@ -1,0 +1,19 @@
+========================================
+DOCKERFILE ANALYSIS: Dockerfile.basic
+========================================
+
+--- Stages ---
+7:FROM eclipse-temurin:17-jdk
+
+--- Key Instructions ---
+17:COPY . .
+20:RUN ./gradlew build -x test --no-daemon
+23:EXPOSE 8080
+25:ENTRYPOINT ["java", "-jar", "build/libs/bookshelf.jar"]
+
+--- Statistics ---
+Total lines: 25
+FROM statements: 1
+RUN statements: 1
+COPY statements: 1
+

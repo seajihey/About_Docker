@@ -1,0 +1,103 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:0b44b2151d78267ab6f2c76208c3be18688f49b2b0afd6852a9533f2cce121c5",
+      "sizeBytes": 7393371,
+      "command": "ADD alpine-minirootfs-3.19.9-x86_64.tar.gz / # buildkit"
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:ddd8c308584f6a27483136eacd608035a68579ba4494c1d8e0a9f42f40d67988",
+      "sizeBytes": 1597082,
+      "command": "apk add --no-cache ca-certificates tzdata"
+    },
+    {
+      "index": 2,
+      "id": "blobs",
+      "digestId": "sha256:18900eeebb6ab5d4d337f8a696b79cd2d3aaac49c0d82f60f4ef54804c5612c4",
+      "sizeBytes": 54477464,
+      "command": "#(nop) COPY dir:2f9785f86b7fb5454a35c45ba3c23d1d4f9f1aca953f69fc4158706659facb11 in /opt/java "
+    },
+    {
+      "index": 3,
+      "id": "blobs",
+      "digestId": "sha256:45d48665613ec0c411aca5bab942e6ecdeb5de19f12ce22948210ae3c5b292b0",
+      "sizeBytes": 0,
+      "command": "#(nop) WORKDIR /app"
+    },
+    {
+      "index": 4,
+      "id": "blobs",
+      "digestId": "sha256:94ef7193f3927f8d1c60dc5e5258ba7b72fd18d47ea04041b02fc90f2fce65b6",
+      "sizeBytes": 64474879,
+      "command": "#(nop) COPY file:d08304ad7e5e3939e5d6fca61bdd9c2ae443b3d658efe7a803165b6a5e8747d2 in app.jar "
+    },
+    {
+      "index": 5,
+      "id": "blobs",
+      "digestId": "sha256:ccf3fce0b462ea44906267ca6812a74952ed463400bad117652cf93159407be6",
+      "sizeBytes": 4710,
+      "command": "addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup"
+    }
+  ],
+  "image": {
+    "sizeBytes": 127947506,
+    "inefficientBytes": 562677,
+    "efficiencyScore": 0.9975398426288982,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 438808,
+        "file": "/etc/ssl/certs/ca-certificates.crt"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 94170,
+        "file": "/lib/apk/db/installed"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 24576,
+        "file": "/lib/apk/db/scripts.tar"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 2404,
+        "file": "/etc/passwd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1417,
+        "file": "/etc/group"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 873,
+        "file": "/etc/shadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 288,
+        "file": "/lib/apk/db/triggers"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 141,
+        "file": "/etc/apk/world"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/lib/apk/exec"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/lib/apk/db/lock"
+      }
+    ]
+  }
+}

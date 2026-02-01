@@ -1,0 +1,29 @@
+========================================
+DOCKERFILE ANALYSIS: Dockerfile.native
+========================================
+
+--- Stages ---
+8:FROM ghcr.io/graalvm/native-image-community:17 AS builder
+34:FROM alpine:3.19
+
+--- Key Instructions ---
+12:RUN microdnf install -y findutils
+18:COPY gradlew .
+19:COPY gradle gradle
+20:RUN chmod +x ./gradlew
+23:COPY build.gradle settings.gradle ./
+24:RUN ./gradlew dependencies --no-daemon || true
+27:COPY src src
+31:RUN ./gradlew nativeCompile --no-daemon -x test
+35:RUN apk add --no-cache ca-certificates tzdata gcompat
+39:COPY --from=builder /app/build/native/nativeCompile/bookshelf ./bookshelf
+41:RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+45:EXPOSE 8080
+46:ENTRYPOINT ["./bookshelf"]
+
+--- Statistics ---
+Total lines: 45
+FROM statements: 2
+RUN statements: 6
+COPY statements: 5
+
