@@ -22,17 +22,13 @@ RUN ./gradlew dependencies --no-daemon || true
 COPY src src
 RUN ./gradlew bootJar --no-daemon -x test
 
-# JAR 압축 해제 (레이어 분석용)
-RUN mkdir -p extracted && \
-    java -Djarmode=layertools -jar build/libs/bookshelf.jar extract --destination extracted
-
 # ----- JRE Build Stage (Jlink) -----
 FROM eclipse-temurin:17-jdk-alpine AS jre-builder
 
 # jlink로 커스텀 JRE 생성
 # Spring Boot 애플리케이션에 필요한 최소 모듈만 포함
 RUN $JAVA_HOME/bin/jlink \
-    --add-modules java.base,java.logging,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,java.sql,java.xml,jdk.unsupported,jdk.crypto.ec \
+    --add-modules java.base,java.logging,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,java.sql,java.xml,jdk.unsupported,jdk.crypto.ec,jdk.crypto.cryptoki \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
@@ -58,11 +54,8 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 
 WORKDIR /app
 
-# Spring Boot 레이어 복사 (캐시 최적화)
-COPY --from=builder /app/extracted/dependencies/ ./
-COPY --from=builder /app/extracted/spring-boot-loader/ ./
-COPY --from=builder /app/extracted/snapshot-dependencies/ ./
-COPY --from=builder /app/extracted/application/ ./
+# JAR 파일 직접 복사 (레이어 추출 방식 대신 단순화)
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
 
 # 비root 사용자
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -73,4 +66,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
