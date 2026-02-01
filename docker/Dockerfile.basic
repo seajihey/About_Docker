@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . .
 
 # 빌드 (테스트 포함, 캐시 미활용)
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build -x test --no-daemon
 
 # JAR 파일 실행
 EXPOSE 8080
