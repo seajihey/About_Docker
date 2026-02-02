@@ -110,71 +110,79 @@ RUN apt-get update \
 
 ---
 
-## 3. [실전 전략] 이미지 다이어트: 3대 핵심 전략
+### 3. [실전 전략] 이미지 다이어트:🐋 Docker Image Optimization Roadmap
 
-### 전략 1: 베이스 이미지 교체 (The Choice)
+본 프로젝트는 Spring Boot 기반 애플리케이션의 배포 효율성을 극대화하기 위해 총 6단계의 이미지 최적화 과정을 수행하며, 용량(Size)과 성능(Performance) 사이의 트레이드오프를 심층 분석하였습니다.
 
-베이스 이미지 선택만으로 **10배 이상의 용량 차이**가 발생합니다.
+## 🚀 단계별 최적화 상세 분석
 
-| 베이스 이미지                | 크기   | 특징                       | 적합한 경우         |
-| ---------------------------- | ------ | -------------------------- | ------------------- |
-| `ubuntu:22.04`               | ~77MB  | 풀 패키지, 디버깅 용이     | 개발/테스트 환경    |
-| `node:18`                    | ~1GB   | 개발 도구 포함             | 빌드 스테이지       |
-| `node:18-alpine`             | ~180MB | musl libc 기반, 경량       | 대부분의 프로덕션   |
-| `node:18-slim`               | ~240MB | glibc 기반, 일부 도구 제거 | Alpine 호환 이슈 시 |
-| `gcr.io/distroless/nodejs18` | ~120MB | 쉘 없음, 최소 런타임       | 보안 중시 프로덕션  |
+### Stage 1: Basic (Heavyweight JDK Image)
 
-```dockerfile
-# Before: 1GB 이상
-FROM node:18
+- **핵심 변화**: 개발 환경 구성을 그대로 유지한 초기 모델.
+- **기술 설명**: 실행 환경임에도 빌드 도구인 **JDK(Java Development Kit)**와 컴파일러를 포함한 베이스 이미지를 사용합니다.
+- **빌드 속도**: **[매우 느림]** 매번 컨테이너 내에서 전체 의존성을 내려받고 컴파일을 수행합니다.
+- **한계점**: **775MB**의 비대한 용량과 넓은 공격 표면(Attack Surface)으로 인해 운영 환경에 부적합합니다.
 
-# After: ~180MB
-FROM node:18-alpine
-```
+### Stage 2: Multi-stage Build (Logical Separation)
 
-### 전략 2: Multi-Stage Build (The Transformation)
+- **핵심 변화**: 빌드 환경과 실행 환경의 물리적 격리.
+- **기술 설명**: 빌드 스테이지에서 생성된 app.jar만 실행 스테이지로 복사합니다. 이 과정에서 **소스 코드와 빌드 잔여물**이 이미지에서 완전히 제거되었습니다.
+- **빌드 속도**: **[보통]** 구조적 개선은 이루어졌으나 실행 엔진 자체의 무게는 변함이 없습니다.
+- **한계점**: 용량이 **484MB**로 줄었으나, 여전히 실행에 불필요한 JDK 전체가 포함되어 있습니다.
 
-빌드 환경과 실행 환경을 **완전히 분리**합니다.
+### Stage 3: JRE Only (Engine Replacement)
 
-```dockerfile
-# ----- Build Stage -----
-FROM eclipse-temurin:17-jdk AS builder
+- **핵심 변화**: **JDK(개발용)**를 제거하고 **JRE(실행 전용)** 도입.
+- **기술 설명**: 컴파일이 완료된 JAR 파일은 실행용 라이브러리만 있으면 됩니다. 따라서 무거운 JDK 대신 실행 전용 엔진인 **JRE(Java Runtime Environment)**로 교체하여 **327MB**까지 감량했습니다.
+- **빌드 속도**: **[보통]** 엔진 교체는 실행 시의 이점을 주며 빌드 사이클은 이전과 유사합니다.
 
-WORKDIR /app
+### Stage 4: Alpine Linux Base (OS Light-weighting)
 
-# Gradle Wrapper 복사 (캐시 활용)
-COPY gradlew .
-COPY gradle gradle
-RUN chmod +x ./gradlew
+- **핵심 변화**: 범용 OS(Ubuntu)에서 **초경량 OS(Alpine)**로 기반 전환.
+- **기술 설명**: 표준 리눅스의 유틸리티를 제거하고 5MB 수준의 핵심 커널만 남긴 **Alpine Linux** 베이스를 사용하여 **245MB**를 달성했습니다.
+- **빌드 속도**: **[빠름]** 베이스 이미지가 가벼워 이미지 Pull/Push 속도가 비약적으로 향상됩니다.
 
-# 의존성 파일 복사 및 다운로드 (캐시 활용)
-COPY build.gradle settings.gradle ./
-RUN ./gradlew dependencies --no-daemon || true
+### Stage 5: Custom JRE with Jlink (Modular Optimization) 🏆
 
-# 소스 코드 복사 및 빌드
-COPY src src
-RUN ./gradlew bootJar --no-daemon -x test
+- **핵심 변화**: JRE 전체 대신 **필수 모듈만 조립한 커스텀 엔진** 제작.
+- **기술 설명**: Java 9+ 모듈 시스템(`jlink`)을 사용해 앱 구동에 필요한 11개 핵심 모듈만 추출했습니다.
+- **빌드 속도**: **[빠름]** 최종 이미지가 **127MB**로 최소화되어 배포 효율이 극대화됩니다.
+- **성과**: 초기 대비 **84% 절감**. 용량 측면에서 가장 효율적인 모델입니다.
 
-# ----- Runtime Stage -----
-FROM eclipse-temurin:17-jdk
+### Stage 6: GraalVM Native Image (AOT Compilation)
 
-LABEL maintainer="BookShelf Team"
-LABEL description="BookShelf API - Multi-stage Build"
-LABEL version="1.0.0"
+- **핵심 변화**: JVM을 제거하고 **기계어 바이너리**로 직접 번역.
+- **기술 설명**: 자바 바이트코드를 빌드 시점에 OS가 즉시 실행 가능한 바이너리로 변환(AOT)합니다.
+- **용량 분석 (Jlink와의 역전 현상)**:
+  - 본 프로젝트에서 Native(**137MB**)가 Jlink(**127MB**)보다 크게 측정된 이유는 **Spring Boot + JPA(Hibernate)** 특성에 기인합니다.
+  - 런타임에 필요한 리플렉션 설정, 프록시 클래스, 프레임워크 지원 코드 등 '부수 짐'이 바이너리에 포함되면서, 순수하게 필요한 모듈만 추출한 Jlink보다 덩치가 커지는 결과가 발생했습니다.
+- **빌드 속도**: **[매우 느림]** 고도의 정적 분석으로 인해 빌드에 막대한 리소스가 소모됩니다.
+- **실행 속도**: **[압도적 우위]** JVM 기동 과정(Warm-up) 없이 **0.1초 내외**로 즉시 실행됩니다.
 
-WORKDIR /app
+---
 
-# 빌드된 JAR만 복사
-COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+## 📊 최종 최적화 지표 요약
 
-# 비root 사용자 생성
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
-USER appuser
+| 최적화 단계 | 이미지 태그           | 크기 (Size) | 빌드 속도 | 실행 속도  | 핵심 전략          |
+| :---------- | :-------------------- | :---------- | :-------- | :--------- | :----------------- |
+| **Stage 1** | `bookshelf:basic`     | **775MB**   | 매우 느림 | 보통       | 기준점             |
+| **Stage 2** | `bookshelf:multi`     | **484MB**   | 보통      | 보통       | 빌드/실행 분리     |
+| **Stage 3** | `bookshelf:jre`       | **327MB**   | 보통      | 보통       | **JDK → JRE 교체** |
+| **Stage 4** | `bookshelf:alpine`    | **245MB**   | 빠름      | 보통       | **초경량 OS 적용** |
+| **Stage 5** | **`bookshelf:jlink`** | **127MB**   | 빠름      | 보통       | **최소 용량 달성** |
+| **Stage 6** | `bookshelf:native`    | **137MB**   | 매우 느림 | **압도적** | **최고 속도 달성** |
 
-EXPOSE 8082
+## 💡 종합 결론
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
+본 실험을 통해 이미지 경량화가 단순히 용량 절감에 그치지 않고, 인프라 가용성을 약 **6배** 향상시킬 수 있음을 확인했습니다. 특히 **Jlink를 통한 모듈화**가 용량 면에서 가장 우수했으나, **서비스의 확장성(Auto-scaling)**이 중요한 환경이라면 시작 속도가 압도적인 **Native Image**가 더 적합한 선택임을 도출하였습니다.
+
+## 💡 결론 및 시사점
+
+1. **인프라 효율성**: 용량 최적화를 통해 동일 서버 자원에서 약 6배 더 많은 컨테이너 운용이 가능해졌습니다.
+2. **배포 속도**: 이미지 크기 감소로 인해 네트워크 전송 속도가 향상되어 CI/CD 효율이 극대화되었습니다.
+3. **보안 강화**: 불필요한 패키지를 제거함으로써 보안 취약점 노출을 최소화한 클라우드 네이티브 배포 표준을 확립하였습니다.
+
+````
 
 **실행 결과**:
 
@@ -195,56 +203,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ~/About_Docker$ docker images | grep bookshelf
 bookshelf          basic        010fde44c852   10 seconds ago      770MB
 bookshelf          multistage   945123b65431   About an hour ago   484MB
-```
-
-### 전략 3: 레이어 캐싱 최적화 (The Order)
-
-Dockerfile의 **명령어 순서**가 빌드 속도를 결정합니다.
-
-**핵심 원칙**: 변경이 적은 것 → 변경이 잦은 것 순으로 배치
-
-```dockerfile
-# ❌ 비효율적인 순서: 코드 변경 시 모든 레이어 재빌드
-FROM node:18-alpine
-WORKDIR /app
-COPY . .                    # 코드 변경 → 이 레이어부터 캐시 무효화
-RUN npm ci                  # 매번 재설치 (3-5분 소요)
-CMD ["node", "server.js"]
-```
-
-```dockerfile
-# ✅ 최적화된 순서: 의존성 캐시 활용
-FROM node:18-alpine
-WORKDIR /app
-
-# 1. 의존성 정의 파일 먼저 복사 (자주 변경되지 않음)
-COPY package*.json ./
-
-# 2. 의존성 설치 (package.json이 변경되지 않으면 캐시 사용)
-RUN npm ci
-
-# 3. 소스 코드 복사 (자주 변경됨)
-COPY . .
-
-CMD ["node", "server.js"]
-```
-
-**빌드 로그 비교**:
-
-```bash
-# 최적화 전: 코드만 수정했는데 전체 재빌드
-Step 3/5 : COPY . .
-Step 4/5 : RUN npm ci
- ---> Running in 2a3b4c5d6e7f   # 매번 3분 소요
-
-# 최적화 후: 코드만 수정 시
-Step 3/5 : COPY package*.json ./
- ---> Using cache              # ✅ 캐시 사용
-Step 4/5 : RUN npm ci
- ---> Using cache              # ✅ 캐시 사용 (3분 → 0초)
-Step 5/6 : COPY . .
- ---> 1a2b3c4d5e6f             # 이것만 새로 실행
-```
+````
 
 ---
 
