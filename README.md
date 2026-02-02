@@ -114,42 +114,291 @@ RUN apt-get update \
 
 본 프로젝트는 Spring Boot 기반 애플리케이션의 배포 효율성을 극대화하기 위해 총 6단계의 이미지 최적화 과정을 수행하며, 용량(Size)과 성능(Performance) 사이의 트레이드오프를 심층 분석하였습니다.
 
+### 분석 도구
+
+- dive: Docker 이미지 레이어 분석
+- docker history: 레이어별 크기 확인
+- jdeps: Java 모듈 의존성 분석
+
 ## 🚀 단계별 최적화 상세 분석
 
 ### Stage 1: Basic (Heavyweight JDK Image)
 
 - **핵심 변화**: 개발 환경 구성을 그대로 유지한 초기 모델.
-- **기술 설명**: 실행 환경임에도 빌드 도구인 **JDK(Java Development Kit)**와 컴파일러를 포함한 베이스 이미지를 사용합니다.
-- **빌드 속도**: **[매우 느림]** 매번 컨테이너 내에서 전체 의존성을 내려받고 컴파일을 수행합니다.
-- **한계점**: **775MB**의 비대한 용량과 넓은 공격 표면(Attack Surface)으로 인해 운영 환경에 부적합합니다.
+- **기술 설명**: 실행 환경임에도 빌드 도구인 **JDK(Java Development Kit)**와 컴파일러를 포함한 베이스 이미지를 사용
+- **빌드 속도**: **[매우 느림]**
+
+**Dockerfile 특징:**
+
+- 단일 스테이지 빌드
+- `eclipse-temurin:17-jdk` 기반
+- 소스코드와 빌드 도구가 최종 이미지에 포함
+
+```dockerfile
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY . .
+RUN ./gradlew build -x test --no-daemon
+ENTRYPOINT ["java", "-jar", "build/libs/bookshelf.jar"]
+```
+
+**분석 결과:**
+
+- **이미지 크기**: 753 MB (789,765,979 bytes)
+- **레이어 수**: 8개
+- **낭비 용량**: 12 MB
+
+**주요 낭비 요인:**
+| 파일 | 크기 | 원인 |
+|------|------|------|
+| `compileAotJava/previous-compilation-data.bin` | 3.2 MB | 빌드 캐시 |
+| `/var/cache/debconf/templates.dat` | 1.3 MB | Debian 패키지 캐시 |
+| AOT 리플렉션 설정 파일 | 1.7 MB | 중복 생성 |
+| Gradle 캐시 | ~1.5 MB | 빌드 도구 잔존 |
+
+**문제점:**
+
+- JDK 전체 포함 (컴파일러, 개발도구 등 불필요)
+- 빌드 아티팩트가 최종 이미지에 잔존
+- Gradle 캐시 및 소스코드 포함
+
+---
 
 ### Stage 2: Multi-stage Build (Logical Separation)
 
 - **핵심 변화**: 빌드 환경과 실행 환경의 물리적 격리.
-- **기술 설명**: 빌드 스테이지에서 생성된 app.jar만 실행 스테이지로 복사합니다. 이 과정에서 **소스 코드와 빌드 잔여물**이 이미지에서 완전히 제거되었습니다.
-- **빌드 속도**: **[보통]** 구조적 개선은 이루어졌으나 실행 엔진 자체의 무게는 변함이 없습니다.
-- **한계점**: 용량이 **484MB**로 줄었으나, 여전히 실행에 불필요한 JDK 전체가 포함되어 있습니다.
+- **기술 설명**: 빌드 스테이지에서 생성된 app.jar만 실행 스테이지로 복사 이 과정에서 소스 코드와 빌드 잔여물을 이미지에서 완전히 제거
+- **빌드 속도**: **[보통]**
+
+**Dockerfile 특징:**
+
+- 2단계 빌드 (builder → runtime)
+- 빌드와 실행 환경 분리
+- JAR 파일만 복사
+
+```dockerfile
+# Stage 1: Build
+FROM eclipse-temurin:17-jdk AS builder
+WORKDIR /app
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# Stage 2: Runtime
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+**분석 결과:**
+
+- **이미지 크기**: 462 MB (484,514,508 bytes)
+- **절감**: 291 MB (-39%)
+- **레이어 수**: 8개
+- **낭비 용량**: 2.1 MB
+
+**개선 사항:**
+
+- ✅ 소스코드 제거
+- ✅ Gradle 캐시 제거
+- ✅ 빌드 아티팩트 제거
+- ❌ JDK 여전히 포함 (JRE면 충분)
+
+**잔여 낭비 요인:**
+| 파일 | 크기 | 원인 |
+|------|------|------|
+| `/var/cache/debconf/templates.dat` | 1.3 MB | Debian 캐시 |
+| `/var/log/dpkg.log` | 386 KB | 패키지 로그 |
+| `/var/lib/dpkg/status` | 231 KB | 패키지 상태 |
+
+---
 
 ### Stage 3: JRE Only (Engine Replacement)
 
-- **핵심 변화**: **JDK(개발용)**를 제거하고 **JRE(실행 전용)** 도입.
-- **기술 설명**: 컴파일이 완료된 JAR 파일은 실행용 라이브러리만 있으면 됩니다. 따라서 무거운 JDK 대신 실행 전용 엔진인 **JRE(Java Runtime Environment)**로 교체하여 **327MB**까지 감량했습니다.
+- **핵심 변화**: JDK(개발용)를 제거하고 JRE(실행 전용) 도입.
+- **기술 설명**: 컴파일이 완료된 JAR 파일은 실행용 라이브러리만 실행 가능. 따라서 무거운 JDK 대신 실행 전용 엔진인 JRE(Java Runtime Environment)로 교체하여 **327MB**까지 감량했습니다.
 - **빌드 속도**: **[보통]** 엔진 교체는 실행 시의 이점을 주며 빌드 사이클은 이전과 유사합니다.
+
+**Dockerfile 특징:**
+
+- 런타임 이미지로 `eclipse-temurin:17-jre` 사용
+- JVM 옵션 최적화 추가
+
+```dockerfile
+# Stage 1: Build
+FROM eclipse-temurin:17-jdk AS builder
+# ... (빌드 과정 동일)
+
+# Stage 2: Runtime with JRE
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+```
+
+**분석 결과:**
+
+- **이미지 크기**: 312 MB (327,288,998 bytes)
+- **절감**: 441 MB (-59%)
+- **레이어 수**: 8개
+- **낭비 용량**: 2.1 MB
+
+**JDK vs JRE 비교:**
+| 구성요소 | JDK | JRE |
+|---------|:---:|:---:|
+| javac (컴파일러) | ✅ | ❌ |
+| jshell | ✅ | ❌ |
+| jlink | ✅ | ❌ |
+| 개발 도구 | ✅ | ❌ |
+| JVM 런타임 | ✅ | ✅ |
+| 표준 라이브러리 | ✅ | ✅ |
+
+**개선 효과:**
+
+- JDK 레이어: 279 MB → JRE 레이어: 140 MB (**139 MB 절감**)
+
+  **한계점**:
+
+- 용량이 줄었으나 주목할만한 정도는 아님. os의 메모리 비중이 큼
+
+---
 
 ### Stage 4: Alpine Linux Base (OS Light-weighting)
 
 - **핵심 변화**: 범용 OS(Ubuntu)에서 **초경량 OS(Alpine)**로 기반 전환.
 - **기술 설명**: 표준 리눅스의 유틸리티를 제거하고 5MB 수준의 핵심 커널만 남긴 **Alpine Linux** 베이스를 사용하여 **245MB**를 달성했습니다.
-- **빌드 속도**: **[빠름]** 베이스 이미지가 가벼워 이미지 Pull/Push 속도가 비약적으로 향상됩니다.
+- **빌드 속도**: **[빠름]** 베이스 이미지가 가벼워 이미지 Pull/Push 속도가 비약적으로 향상.
 
-### Stage 5: Custom JRE with Jlink (Modular Optimization) 🏆
+**Dockerfile 특징:**
+
+- Alpine Linux 기반 이미지 사용
+- musl libc (glibc 대비 경량)
+- apk 패키지 관리자
+
+```dockerfile
+# Stage 1: Build
+FROM eclipse-temurin:17-jdk-alpine AS builder
+# ... (빌드 과정)
+
+# Stage 2: Runtime with Alpine
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+```
+
+**분석 결과:**
+
+- **이미지 크기**: 234 MB (245,704,710 bytes)
+- **절감**: 519 MB (-69%)
+- **레이어 수**: 8개
+- **낭비 용량**: 665 KB (최저)
+
+**레이어 구성:**
+| 레이어 | 크기 | 설명 |
+|--------|------|------|
+| Alpine base | 8.3 MB | 기본 OS (Debian 78MB 대비 -89%) |
+| 시스템 패키지 | 33.3 MB | fontconfig, ca-certificates 등 |
+| JRE | 139.6 MB | Temurin JRE for Alpine |
+| 애플리케이션 | 64.5 MB | bookshelf.jar |
+
+**Debian vs Alpine 비교:**
+| 항목 | Debian | Alpine |
+|------|--------|--------|
+| 기본 이미지 크기 | 78 MB | 8 MB |
+| C 라이브러리 | glibc | musl |
+| 패키지 관리자 | apt | apk |
+| 셸 | bash | sh (busybox) |
+
+---
+
+### Stage 5: Custom JRE with Jlink (커스텀 JRE)
 
 - **핵심 변화**: JRE 전체 대신 **필수 모듈만 조립한 커스텀 엔진** 제작.
 - **기술 설명**: Java 9+ 모듈 시스템(`jlink`)을 사용해 앱 구동에 필요한 11개 핵심 모듈만 추출했습니다.
 - **빌드 속도**: **[빠름]** 최종 이미지가 **127MB**로 최소화되어 배포 효율이 극대화됩니다.
-- **성과**: 초기 대비 **84% 절감**. 용량 측면에서 가장 효율적인 모델입니다.
 
-### Stage 6: GraalVM Native Image (AOT Compilation)
+**Dockerfile 특징:**
+
+- 3단계 빌드 (builder → jre-builder → runtime)
+- jlink로 필요한 Java 모듈만 포함
+- 최소 Alpine 이미지 사용
+
+```dockerfile
+# Stage 1: Build application
+FROM eclipse-temurin:17-jdk-alpine AS builder
+# ... (빌드 과정)
+
+# Stage 2: Create custom JRE
+FROM eclipse-temurin:17-jdk-alpine AS jre-builder
+RUN $JAVA_HOME/bin/jlink \
+    --add-modules java.base,java.logging,java.sql,java.naming,java.desktop,java.management,java.security.jgss,java.instrument \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=2 \
+    --output /custom-jre
+
+# Stage 3: Minimal runtime
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates tzdata
+COPY --from=jre-builder /custom-jre /opt/java
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+ENV JAVA_HOME=/opt/java
+ENV PATH="$JAVA_HOME/bin:$PATH"
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseStringDeduplication"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+```
+
+**분석 결과:**
+
+- **이미지 크기**: 122 MB (127,947,506 bytes) ��
+- **절감**: 631 MB (-84%)
+- **레이어 수**: 6개
+- **효율성**: 99.75%
+- **낭비 용량**: 563 KB
+
+**레이어 구성:**
+| 레이어 | 크기 | 설명 |
+|--------|------|------|
+| Alpine base | 7.4 MB | 최소 OS |
+| 시스템 패키지 | 1.6 MB | ca-certificates, tzdata만 |
+| Custom JRE | 54.5 MB | jlink 생성 (표준 JRE의 39%) |
+| 애플리케이션 | 64.5 MB | bookshelf.jar |
+
+**jlink 포함 모듈:**
+
+```
+java.base        - 핵심 클래스
+java.logging     - 로깅 API
+java.sql         - JDBC
+java.naming      - JNDI
+java.desktop     - AWT (일부 라이브러리 의존성)
+java.management  - JMX
+java.security.jgss - 보안
+java.instrument  - 에이전트 지원
+```
+
+**JRE 크기 비교:**
+| JRE 유형 | 크기 | 절감률 |
+|---------|------|--------|
+| 표준 JRE | 140 MB | - |
+| Custom JRE (jlink) | 54.5 MB | -61% |
+
+⭐**성과**: 초기 대비 **84% 절감**. 용량 측면에서 가장 효율적인 모델입니다.
+
+---
+
+### Stage 6: GraalVM Native Image
 
 - **핵심 변화**: JVM을 제거하고 **기계어 바이너리**로 직접 번역.
 - **기술 설명**: 자바 바이트코드를 빌드 시점에 OS가 즉시 실행 가능한 바이너리로 변환(AOT)합니다.
@@ -161,18 +410,59 @@ RUN apt-get update \
 
 ---
 
-## 📊 최종 최적화 지표 요약
+## 📊핵심 결과
 
-| 최적화 단계 | 이미지 태그           | 크기 (Size) | 빌드 속도 | 실행 속도  | 핵심 전략          |
-| :---------- | :-------------------- | :---------- | :-------- | :--------- | :----------------- |
-| **Stage 1** | `bookshelf:basic`     | **775MB**   | 매우 느림 | 보통       | 기준점             |
-| **Stage 2** | `bookshelf:multi`     | **484MB**   | 보통      | 보통       | 빌드/실행 분리     |
-| **Stage 3** | `bookshelf:jre`       | **327MB**   | 보통      | 보통       | **JDK → JRE 교체** |
-| **Stage 4** | `bookshelf:alpine`    | **245MB**   | 빠름      | 보통       | **초경량 OS 적용** |
-| **Stage 5** | **`bookshelf:jlink`** | **127MB**   | 빠름      | 보통       | **최소 용량 달성** |
-| **Stage 6** | `bookshelf:native`    | **137MB**   | 매우 느림 | **압도적** | **최고 속도 달성** |
+| 최적화 단계 | 이미지 크기 |  절감률  |   실행속도   | 낭비 용량 |
+| :---------: | :---------: | :------: | :----------: | :-------: |
+|    basic    |   753 MB    |    -     |     보통     |   12 MB   |
+| multistage  |   462 MB    |   -39%   |     보통     |  2.1 MB   |
+|     jre     |   312 MB    |   -59%   |     보통     |  2.1 MB   |
+|   alpine    |   234 MB    |   -69%   |     빠름     |  665 KB   |
+|    jlink    |   122 MB    | **-84%** |     빠름     |  563 KB   |
+|   native    |   337 MB    |   -55%   | **💫압도적** |  345 MB   |
 
-## 💡 종합 결론
+## ⭐최적화 흐름도
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Docker 이미지 최적화 흐름                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  Basic (753MB)
+      │
+      │ 멀티스테이지 빌드 적용
+      │ - 빌드/런타임 분리
+      │ - 소스코드, Gradle 캐시 제거
+      ▼
+  Multistage (462MB)  ──────────────────────────────────────  -39%
+      │
+      │ JDK → JRE 전환
+      │ - 컴파일러, 개발도구 제거
+      ▼
+  JRE (312MB)  ─────────────────────────────────────────────  -59%
+      │
+      │ Debian → Alpine 전환
+      │ - 경량 OS (78MB → 8MB)
+      ▼
+  Alpine (234MB)  ──────────────────────────────────────────  -69%
+      │
+      │ jlink 커스텀 JRE
+      │ - 필요 모듈만 포함
+      ▼
+  Jlink (122MB)  ───────────────────────────────────────────  -84% 🏆
+
+
+  [별도 경로]
+      │
+      │ GraalVM Native Image
+      │ - AOT 컴파일
+      │ - JVM 제거
+      ▼
+  Native (337MB*)  ─────────────────────────────────────────  -55%
+  * Dockerfile 최적화 시 ~170MB 가능
+```
+
+## 💡 권장 사용 시나리오
 
 본 실험을 통해 이미지 경량화가 단순히 용량 절감에 그치지 않고, 인프라 가용성을 약 **6배** 향상시킬 수 있음을 확인했습니다. 특히 **Jlink를 통한 모듈화**가 용량 면에서 가장 우수했으나, **서비스의 확장성(Auto-scaling)**이 중요한 환경이라면 시작 속도가 압도적인 **Native Image**가 더 적합한 선택임을 도출하였습니다.
 
@@ -184,28 +474,6 @@ RUN apt-get update \
 
 ````
 
-**실행 결과**:
-
-<img src="image1.png" width="600" alt="Multi-Stage Build1">
-<img src="image2.png" width="600" alt="Multi-Stage Build2">
-<img src="image3.png" width="600" alt="Multi-Stage Build3">
-
-- 빌드 스테이지 (image2.png): BUILD SUCCESSFUL in 45s
-
-- 실행 스테이지 (image3.png): BUILD SUCCESSFUL in 24s
-
-- 총 빌드시간 : 69s
-
-**메모리 비교**:
-
-```bash
-
-~/About_Docker$ docker images | grep bookshelf
-bookshelf          basic        010fde44c852   10 seconds ago      770MB
-bookshelf          multistage   945123b65431   About an hour ago   484MB
-````
-
----
 
 ## 4. 결과: 경량화가 CI/CD에 주는 선물
 
@@ -298,3 +566,4 @@ bookshelf          multistage   945123b65431   About an hour ago   484MB
 ---
 
 > **핵심 메시지**: Docker 이미지 최적화는 단순한 기술적 개선이 아닙니다. 개발자 생산성, 서비스 안정성, 그리고 운영 비용에 직접적인 영향을 미치는 **비즈니스 가치**입니다.
+````
