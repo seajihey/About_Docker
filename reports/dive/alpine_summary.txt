@@ -6,9 +6,9 @@ DIVE ANALYSIS: bookshelf:alpine
 [1mImage Source: [0mdocker://bookshelf:alpine
 [1mFetching image...[0m (this can take a while for large images)
 [1mAnalyzing image...[0m
-  efficiency: 99.8297 %
+  efficiency: 99.8294 %
   wastedBytes: 665067 bytes (665 kB)
-  userWastedPercent: 0.2802 %
+  userWastedPercent: 0.2807 %
 [1mInefficient Files:[0m
 Count  Wasted Space  File Path
     2        439 kB  /etc/ssl/certs/ca-certificates.crt

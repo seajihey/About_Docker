@@ -6,12 +6,11 @@ DIVE ANALYSIS: bookshelf:native
 [1mImage Source: [0mdocker://bookshelf:native
 [1mFetching image...[0m (this can take a while for large images)
 [1mAnalyzing image...[0m
-  efficiency: 51.2029 %
-  wastedBytes: 344554396 bytes (345 MB)
-  userWastedPercent: 99.6613 %
+  efficiency: 99.8251 %
+  wastedBytes: 564732 bytes (565 kB)
+  userWastedPercent: 0.3251 %
 [1mInefficient Files:[0m
 Count  Wasted Space  File Path
-    2        344 MB  /app/bookshelf
     2        439 kB  /etc/ssl/certs/ca-certificates.crt
     2         96 kB  /lib/apk/db/installed
     2         25 kB  /lib/apk/db/scripts.tar
@@ -23,8 +22,8 @@ Count  Wasted Space  File Path
     2           0 B  /lib/apk/exec
     2           0 B  /lib/apk/db/lock
 [1mResults:[0m
-  [1;7;31mFAIL[0m: highestUserWastedPercent: too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.9966130946116517 > threshold=0.1)
+  PASS: highestUserWastedPercent
   [34mSKIP[0m: highestWastedBytes: rule disabled
-  [1;7;31mFAIL[0m: lowestEfficiency: image efficiency is too low (efficiency=0.5120290851994683 < threshold=0.9)
-[31mResult:FAIL [Total:3] [Passed:0] [Failed:2] [Warn:0] [Skipped:1][0m
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:2] [Failed:0] [Warn:0] [Skipped:1][0m
 

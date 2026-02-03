@@ -144,12 +144,12 @@
     <div class="container">
         <header>
             <h1>🐳 Docker Image Optimization Report</h1>
-            <p class="subtitle">BookShelf API - Generated: 2026-02-01 21:02:04</p>
+            <p class="subtitle">BookShelf API - Generated: 2026-02-03 16:41:28</p>
         </header>
 
         <div class="metrics">
             <div class="metric-card">
-                <div class="metric-value danger">753MB</div>
+                <div class="metric-value danger">743MB</div>
                 <div class="metric-label">Original Size (Basic)</div>
             </div>
             <div class="metric-card">
@@ -157,7 +157,7 @@
                 <div class="metric-label">Best Optimized (JLINK)</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value warning">631MB</div>
+                <div class="metric-value warning">621MB</div>
                 <div class="metric-label">Total Saved</div>
             </div>
             <div class="metric-card">
@@ -188,7 +188,7 @@
                     <tr>
                         <td><strong>BASIC</strong></td>
                         <td>
-                            753 MB
+                            743 MB
                             <div class="size-bar" style="width: 100.0%"></div>
                         </td>
                         <td>8</td>
@@ -200,21 +200,10 @@
                         <td><strong>MULTISTAGE</strong></td>
                         <td>
                             462 MB
-                            <div class="size-bar" style="width: 61.35053010407834%"></div>
+                            <div class="size-bar" style="width: 62.15576459988548%"></div>
                         </td>
                         <td>8</td>
-                        <td>39%</td>
-                        <td><span class="badge badge-warning">GOOD</span></td>
-                    </tr>
-
-                    <tr>
-                        <td><strong>NATIVE</strong></td>
-                        <td>
-                            337 MB
-                            <div class="size-bar" style="width: 44.71275520663271%"></div>
-                        </td>
-                        <td>5</td>
-                        <td>55%</td>
+                        <td>38%</td>
                         <td><span class="badge badge-warning">GOOD</span></td>
                     </tr>
 
@@ -222,10 +211,10 @@
                         <td><strong>JRE</strong></td>
                         <td>
                             312 MB
-                            <div class="size-bar" style="width: 41.44306493435694%"></div>
+                            <div class="size-bar" style="width: 41.968000754815485%"></div>
                         </td>
                         <td>8</td>
-                        <td>59%</td>
+                        <td>58%</td>
                         <td><span class="badge badge-warning">GOOD</span></td>
                     </tr>
 
@@ -233,7 +222,7 @@
                         <td><strong>ALPINE</strong></td>
                         <td>
                             234 MB
-                            <div class="size-bar" style="width: 31.11350899440558%"></div>
+                            <div class="size-bar" style="width: 31.493005267168193%"></div>
                         </td>
                         <td>8</td>
                         <td>69%</td>
@@ -241,10 +230,21 @@
                     </tr>
 
                     <tr>
+                        <td><strong>NATIVE</strong></td>
+                        <td>
+                            173 MB
+                            <div class="size-bar" style="width: 23.256553886879775%"></div>
+                        </td>
+                        <td>5</td>
+                        <td>77%</td>
+                        <td><span class="badge badge-good">EXCELLENT</span></td>
+                    </tr>
+
+                    <tr>
                         <td><strong>JLINK</strong></td>
                         <td>
                             122 MB
-                            <div class="size-bar" style="width: 16.202809338623126%"></div>
+                            <div class="size-bar" style="width: 16.370233848559053%"></div>
                         </td>
                         <td>6</td>
                         <td>84%</td>
@@ -285,7 +285,7 @@
                 labels: ["BASIC", "MULTISTAGE", "JRE", "ALPINE", "JLINK", "NATIVE"],
                 datasets: [{
                     label: 'Size (MB)',
-                    data: [753.2, 462.1, 312.2, 234.3, 122.0, 336.8],
+                    data: [742.7, 461.7, 311.7, 233.9, 121.6, 172.7],
                     backgroundColor: ["#e74c3c", "#e67e22", "#f39c12", "#27ae60", "#2980b9", "#9b59b6"],
                     borderColor: ["#e74c3c", "#e67e22", "#f39c12", "#27ae60", "#2980b9", "#9b59b6"],
                     borderWidth: 2,
@@ -318,7 +318,7 @@
             data: {
                 labels: ["BASIC", "MULTISTAGE", "JRE", "ALPINE", "JLINK", "NATIVE"],
                 datasets: [{
-                    data: [753.2, 462.1, 312.2, 234.3, 122.0, 336.8],
+                    data: [742.7, 461.7, 311.7, 233.9, 121.6, 172.7],
                     backgroundColor: ["#e74c3c", "#e67e22", "#f39c12", "#27ae60", "#2980b9", "#9b59b6"],
                     borderWidth: 0
                 }]

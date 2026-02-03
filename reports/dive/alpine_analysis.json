@@ -38,29 +38,29 @@
     {
       "index": 5,
       "id": "blobs",
-      "digestId": "sha256:ca683c5c22b2ae513dc303d31787d726b812c77ddb2174b5822c4d329c00dc82",
+      "digestId": "sha256:926eb418313d57942324a80ca299612679435813cdf4fdf84af8bfa540b25213",
       "sizeBytes": 0,
-      "command": "#(nop) WORKDIR /app"
+      "command": "WORKDIR /app"
     },
     {
       "index": 6,
       "id": "blobs",
-      "digestId": "sha256:fd079c226276f6ed9c10cc31b530afece54cc34cb5fdb45814ce6a66610f31bf",
-      "sizeBytes": 64474879,
-      "command": "#(nop) COPY file:d08304ad7e5e3939e5d6fca61bdd9c2ae443b3d658efe7a803165b6a5e8747d2 in app.jar "
+      "digestId": "sha256:1246dbd7834766f172be6afa9f74c705628fd7138494b31734cc59e5a8cd2734",
+      "sizeBytes": 64018607,
+      "command": "COPY /app/build/libs/bookshelf.jar app.jar # buildkit"
     },
     {
       "index": 7,
       "id": "blobs",
-      "digestId": "sha256:27e9f8bf644f0ce6b689f4310f6fb7e3f6e6092d0c6f4f59bb7375cfd86457b8",
+      "digestId": "sha256:b977a6a10328d530ab3b4e6a633cdef9921bb6884c90727783e095574f9208b8",
       "sizeBytes": 3059,
-      "command": "addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup"
+      "command": "RUN /bin/sh -c addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup # buildkit"
     }
   ],
   "image": {
-    "sizeBytes": 245704710,
+    "sizeBytes": 245248438,
     "inefficientBytes": 665067,
-    "efficiencyScore": 0.9982968051365397,
+    "efficiencyScore": 0.9982936364308261,
     "fileReference": [
       {
         "count": 2,

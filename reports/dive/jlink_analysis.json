@@ -10,43 +10,43 @@
     {
       "index": 1,
       "id": "blobs",
-      "digestId": "sha256:ddd8c308584f6a27483136eacd608035a68579ba4494c1d8e0a9f42f40d67988",
+      "digestId": "sha256:2a0dd85efc7eed118cebd9b7509816e5fbcc708f2e504255e072f7b4f6415fd6",
       "sizeBytes": 1597082,
-      "command": "apk add --no-cache ca-certificates tzdata"
+      "command": "RUN /bin/sh -c apk add --no-cache ca-certificates tzdata # buildkit"
     },
     {
       "index": 2,
       "id": "blobs",
-      "digestId": "sha256:18900eeebb6ab5d4d337f8a696b79cd2d3aaac49c0d82f60f4ef54804c5612c4",
+      "digestId": "sha256:cff8d8d1eacd4ec26314bcd6d664c49d7dee690c0fb2ba504c1556b66ac963f0",
       "sizeBytes": 54477464,
-      "command": "#(nop) COPY dir:2f9785f86b7fb5454a35c45ba3c23d1d4f9f1aca953f69fc4158706659facb11 in /opt/java "
+      "command": "COPY /custom-jre /opt/java # buildkit"
     },
     {
       "index": 3,
       "id": "blobs",
-      "digestId": "sha256:45d48665613ec0c411aca5bab942e6ecdeb5de19f12ce22948210ae3c5b292b0",
+      "digestId": "sha256:f4c35f302f066b714ca1cb093d19fb137f06482196b889f2768ab31239d62314",
       "sizeBytes": 0,
-      "command": "#(nop) WORKDIR /app"
+      "command": "WORKDIR /app"
     },
     {
       "index": 4,
       "id": "blobs",
-      "digestId": "sha256:94ef7193f3927f8d1c60dc5e5258ba7b72fd18d47ea04041b02fc90f2fce65b6",
-      "sizeBytes": 64474879,
-      "command": "#(nop) COPY file:d08304ad7e5e3939e5d6fca61bdd9c2ae443b3d658efe7a803165b6a5e8747d2 in app.jar "
+      "digestId": "sha256:c634977afe35a935a82f3cf053193b2a72c2bb283dc4197c2d70603c99238ba7",
+      "sizeBytes": 64018607,
+      "command": "COPY /app/build/libs/bookshelf.jar app.jar # buildkit"
     },
     {
       "index": 5,
       "id": "blobs",
-      "digestId": "sha256:ccf3fce0b462ea44906267ca6812a74952ed463400bad117652cf93159407be6",
+      "digestId": "sha256:3cccbd23e228c1c2d7f6e121435aef14bece3134babb303c130cf86629dd374b",
       "sizeBytes": 4710,
-      "command": "addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup"
+      "command": "RUN /bin/sh -c addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup # buildkit"
     }
   ],
   "image": {
-    "sizeBytes": 127947506,
+    "sizeBytes": 127491234,
     "inefficientBytes": 562677,
-    "efficiencyScore": 0.9975398426288982,
+    "efficiencyScore": 0.9975310380947446,
     "fileReference": [
       {
         "count": 2,

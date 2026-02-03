@@ -10,42 +10,37 @@
     {
       "index": 1,
       "id": "blobs",
-      "digestId": "sha256:79007a3bbbd028c9c32951b6167fd5827e8648e58cd2f2f5d89ee2661d32a1ed",
+      "digestId": "sha256:0bb67410b073dd693d44caab0ccb64c38b941a0ff59c293b2caa08e56f6320df",
       "sizeBytes": 1730961,
-      "command": "apk add --no-cache ca-certificates tzdata gcompat"
+      "command": "RUN /bin/sh -c apk add --no-cache ca-certificates tzdata gcompat # buildkit"
     },
     {
       "index": 2,
       "id": "blobs",
-      "digestId": "sha256:7a220978e9535ba0dfdcf1a94a2f1b2ca6ab07bf77c4d296361048bdeb42f845",
-      "sizeBytes": 0,
-      "command": "#(nop) WORKDIR /app"
+      "digestId": "sha256:45f0735aa665bcf10efb58bff77c45dea9b7c9f98e52bb7a6d3e509728aa957b",
+      "sizeBytes": 4710,
+      "command": "RUN /bin/sh -c addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup # buildkit"
     },
     {
       "index": 3,
       "id": "blobs",
-      "digestId": "sha256:304a5096262b8c742f84eb49be91f35865f4fa81bc22ba1d6e69464429cb6531",
-      "sizeBytes": 171994832,
-      "command": "#(nop) COPY file:0823075501eadd6257037b29055918d3564e636b6b9e70e8f644b330ae851bb4 in ./bookshelf "
+      "digestId": "sha256:1264097d2b2961e79416cc92dc8e769dadd6855f4254329dfe48ad31a6174ad1",
+      "sizeBytes": 0,
+      "command": "WORKDIR /app"
     },
     {
       "index": 4,
       "id": "blobs",
-      "digestId": "sha256:811da19770b23e0c10b648397f35e3f5e7d0f7b0c3cbc26e36a21f367cba7b92",
-      "sizeBytes": 171999542,
-      "command": "addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup \u0026\u0026     chown -R appuser:appgroup /app"
+      "digestId": "sha256:8102bdc9224712562363f5fe0bdd20996c9ceec18bd61c51a9710de1234b4afc",
+      "sizeBytes": 171994832,
+      "command": "COPY --chown=appuser:appgroup /app/build/native/nativeCompile/bookshelf ./bookshelf # buildkit"
     }
   ],
   "image": {
-    "sizeBytes": 353118706,
-    "inefficientBytes": 344554396,
-    "efficiencyScore": 0.5120290851994683,
+    "sizeBytes": 181123874,
+    "inefficientBytes": 564732,
+    "efficiencyScore": 0.9982507772553496,
     "fileReference": [
-      {
-        "count": 2,
-        "sizeBytes": 343989664,
-        "file": "/app/bookshelf"
-      },
       {
         "count": 2,
         "sizeBytes": 438808,
