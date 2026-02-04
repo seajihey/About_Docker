@@ -37,6 +37,7 @@ public class BookController {
         log.info("POST /api/v1/books - Creating book: {}", request.getTitle());
         
         BookResponse response = bookService.createBook(request);
+        System.out.println("도서가 등록되었습니다.");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("도서가 등록되었습니다.", response));
@@ -105,6 +106,7 @@ public class BookController {
         log.info("PUT /api/v1/books/{} - Updating book", id);
         
         BookResponse response = bookService.updateBook(id, request);
+        System.out.println("도서가 수정되었습니다.");
         return ResponseEntity.ok(ApiResponse.success("도서가 수정되었습니다.", response));
     }
 
@@ -116,6 +118,7 @@ public class BookController {
         log.info("PATCH /api/v1/books/{}/stock - Updating stock to {}", id, request.getQuantity());
         
         BookResponse response = bookService.updateStock(id, request.getQuantity());
+        System.out.println("재고가 변경되었습니다.");
         return ResponseEntity.ok(ApiResponse.success("재고가 변경되었습니다.", response));
     }
 
@@ -126,6 +129,7 @@ public class BookController {
         log.info("DELETE /api/v1/books/{} - Deleting book", id);
         
         bookService.deleteBook(id);
+        System.out.println("도서가 삭제되었습니다.");
         return ResponseEntity.ok(ApiResponse.success("도서가 삭제되었습니다."));
     }
 }
