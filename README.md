@@ -741,15 +741,15 @@ Java는 힙 메모리 외에도 **Metaspace, Stack, Native Memory** 등의 Non-H
 
 ---
 
-## 👥 기여자
+## 👥 프로젝트 팀원
 
-| 이름 | 역할 |
-|:----:|:----:|
-| 김종연 | 📝 |
-| 서지혜 | 📝 |
-| 이동욱 | 📝 |
+|  |  |  |
+| :---: | :---: | :---: |
+| <img src="https://github.com/seajihey.png" width="180px"> | <img src="https://github.com/jongyeon0214.png" width="180px"> | <img src="https://github.com/cuterrabbit.png" width="180px"> |
+| [서지혜](https://github.com/seajihey) | [김종연](https://github.com/jongyeon0214) | [이동욱](https://github.com/cuterrabbit) |
 
 ---
+
 
 ## 📄 라이선스
 
