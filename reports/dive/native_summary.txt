@@ -1,0 +1,29 @@
+========================================
+DIVE ANALYSIS: bookshelf:native
+========================================
+
+  Using default CI config
+[1mImage Source: [0mdocker://bookshelf:native
+[1mFetching image...[0m (this can take a while for large images)
+[1mAnalyzing image...[0m
+  efficiency: 99.8251 %
+  wastedBytes: 564732 bytes (565 kB)
+  userWastedPercent: 0.3251 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    2        439 kB  /etc/ssl/certs/ca-certificates.crt
+    2         96 kB  /lib/apk/db/installed
+    2         25 kB  /lib/apk/db/scripts.tar
+    2        2.4 kB  /etc/passwd
+    2        1.4 kB  /etc/group
+    2         873 B  /etc/shadow
+    2         288 B  /lib/apk/db/triggers
+    2         149 B  /etc/apk/world
+    2           0 B  /lib/apk/exec
+    2           0 B  /lib/apk/db/lock
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  [34mSKIP[0m: highestWastedBytes: rule disabled
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:2] [Failed:0] [Warn:0] [Skipped:1][0m
+

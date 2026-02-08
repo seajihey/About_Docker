@@ -1,0 +1,108 @@
+========================================
+DIVE ANALYSIS: bookshelf:alpine
+========================================
+
+  Using default CI config
+[1mImage Source: [0mdocker://bookshelf:alpine
+[1mFetching image...[0m (this can take a while for large images)
+[1mAnalyzing image...[0m
+  efficiency: 99.8294 %
+  wastedBytes: 665067 bytes (665 kB)
+  userWastedPercent: 0.2807 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    2        439 kB  /etc/ssl/certs/ca-certificates.crt
+    2        120 kB  /lib/apk/db/installed
+    2         40 kB  /usr/bin/env
+    2         35 kB  /usr/bin/sha512sum
+    2         28 kB  /lib/apk/db/scripts.tar
+    2        1.5 kB  /etc/passwd
+    2        1.0 kB  /etc/group
+    2         549 B  /etc/shadow
+    2         426 B  /lib/apk/db/triggers
+    2         262 B  /etc/apk/world
+    2           0 B  /usr/bin/unlink
+    2           0 B  /usr/bin/uniq
+    2           0 B  /usr/bin/unexpand
+    2           0 B  /usr/bin/tty
+    2           0 B  /usr/bin/truncate
+    2           0 B  /usr/bin/tr
+    2           0 B  /usr/bin/timeout
+    2           0 B  /usr/bin/test
+    2           0 B  /usr/bin/tee
+    2           0 B  /usr/bin/tail
+    2           0 B  /usr/bin/tac
+    2           0 B  /bin/cat
+    2           0 B  /usr/bin/split
+    2           0 B  /usr/bin/sort
+    2           0 B  /usr/bin/shuf
+    2           0 B  /usr/bin/shred
+    2           0 B  /usr/bin/wc
+    2           0 B  /usr/bin/sha256sum
+    2           0 B  /usr/bin/sha1sum
+    2           0 B  /usr/bin/seq
+    2           0 B  /usr/bin/realpath
+    2           0 B  /usr/bin/readlink
+    2           0 B  /usr/bin/printf
+    2           0 B  /usr/bin/paste
+    2           0 B  /usr/bin/od
+    2           0 B  /usr/bin/nproc
+    2           0 B  /usr/bin/nohup
+    2           0 B  /usr/bin/nl
+    2           0 B  /usr/bin/mkfifo
+    2           0 B  /usr/bin/md5sum
+    2           0 B  /usr/bin/install
+    2           0 B  /usr/bin/id
+    2           0 B  /usr/bin/who
+    2           0 B  /bin/stat
+    2           0 B  /usr/bin/whoami
+    2           0 B  /usr/bin/factor
+    2           0 B  /usr/bin/expr
+    2           0 B  /usr/bin/expand
+    2           0 B  /usr/bin/yes
+    2           0 B  /usr/bin/hostid
+    2           0 B  /bin/base64
+    2           0 B  /usr/sbin/chroot
+    2           0 B  /usr/bin/du
+    2           0 B  /usr/bin/dirname
+    2           0 B  /usr/bin/cut
+    2           0 B  /usr/bin/comm
+    2           0 B  /usr/bin/cksum
+    2           0 B  /usr/bin/basename
+    2           0 B  /usr/bin/[
+    2           0 B  /bin/uname
+    2           0 B  /bin/true
+    2           0 B  /bin/touch
+    2           0 B  /bin/sync
+    2           0 B  /bin/stty
+    2           0 B  /usr/bin/head
+    2           0 B  /bin/sleep
+    2           0 B  /bin/rmdir
+    2           0 B  /bin/rm
+    2           0 B  /bin/pwd
+    2           0 B  /bin/printenv
+    2           0 B  /bin/nice
+    2           0 B  /bin/mv
+    2           0 B  /bin/mktemp
+    2           0 B  /bin/mknod
+    2           0 B  /bin/mkdir
+    2           0 B  /bin/ls
+    2           0 B  /bin/ln
+    2           0 B  /bin/link
+    2           0 B  /bin/false
+    2           0 B  /bin/echo
+    2           0 B  /bin/df
+    2           0 B  /bin/dd
+    2           0 B  /bin/date
+    2           0 B  /bin/cp
+    2           0 B  /bin/chown
+    2           0 B  /bin/chmod
+    2           0 B  /bin/chgrp
+    2           0 B  /usr/bin/sum
+    2           0 B  /usr/bin/fold
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  [34mSKIP[0m: highestWastedBytes: rule disabled
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:2] [Failed:0] [Warn:0] [Skipped:1][0m
+

@@ -1,0 +1,79 @@
+# ==============================================================================
+# 📦 BookShelf API - 통합 최적화 Dockerfile
+# ==============================================================================
+#
+# 빌드: docker build -f Dockerfile.optimized -t bookshelf:optimized .
+# 실행: docker run -p 8080:8080 bookshelf:optimized
+# 
+# 적용된 최적화 전략:
+#   1. Multi-stage Build   → 빌드 도구와 런타임 분리
+#   2. JRE Only            → JDK 대신 JRE 사용
+#   3. Alpine Linux        → 경량 OS (~5MB)
+#   4. Jlink Custom JRE    → 필요한 Java 모듈만 포함
+#   5. Layer Caching       → 변경 빈도순 COPY로 캐시 효율화
+#   6. Security            → non-root 사용자 + COPY --chown
+#
+# 예상 이미지 크기: ~130MB (기존 650MB → 약 80% 감소)
+#
+# ==============================================================================
+
+# ----- Stage 1: Build (Gradle) -----
+FROM eclipse-temurin:17-jdk-alpine AS builder
+
+WORKDIR /app
+
+# Gradle Wrapper 복사 (캐시 - 거의 변경 안됨)
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 의존성 다운로드 (캐시 - 가끔 변경)
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 소스 복사 및 빌드 (자주 변경)
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ----- Stage 2: Custom JRE (Jlink) -----
+FROM eclipse-temurin:17-jdk-alpine AS jre-builder
+
+RUN $JAVA_HOME/bin/jlink \
+    --add-modules java.base,java.logging,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,java.sql,java.xml,jdk.unsupported,jdk.crypto.ec,jdk.crypto.cryptoki \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=2 \
+    --output /custom-jre
+
+# ----- Stage 3: Runtime (Alpine + Custom JRE) -----
+FROM alpine:3.19
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - Fully Optimized"
+LABEL version="1.0.0"
+
+# 필수 패키지만 설치
+RUN apk add --no-cache ca-certificates tzdata
+
+# 커스텀 JRE 복사
+COPY --from=jre-builder /custom-jre /opt/java
+ENV JAVA_HOME=/opt/java
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+WORKDIR /app
+
+# non-root 사용자 생성
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# JAR 복사 (소유권 동시 설정으로 레이어 최적화)
+COPY --chown=appuser:appgroup --from=builder /app/build/libs/*.jar app.jar
+
+USER appuser
+
+# JVM 컨테이너 최적화 옵션
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseStringDeduplication"
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

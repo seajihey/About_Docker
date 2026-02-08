@@ -1,0 +1,46 @@
+# ==============================================================================
+# Stage 3: JRE Only
+# 예상 크기: ~280MB
+# 개선점: JDK 대신 JRE 사용 (컴파일러 제외)
+# ==============================================================================
+
+# ----- Build Stage -----
+FROM eclipse-temurin:17-jdk AS builder
+
+WORKDIR /app
+
+# Gradle Wrapper 복사
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 의존성 먼저 다운로드 (캐시 활용)
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 소스 복사 및 빌드
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ----- Runtime Stage (JRE만 사용) -----
+FROM eclipse-temurin:17-jre
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - JRE Only"
+LABEL version="1.0.0"
+
+WORKDIR /app
+
+# JAR 복사
+COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+
+# 비root 사용자
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+USER appuser
+
+# JVM 메모리 최적화 옵션
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

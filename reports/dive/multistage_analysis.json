@@ -1,0 +1,197 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:123a078714d5ea9382d4d9f550753aefce8b34ec5ae11ae8273038d3bcbb943f",
+      "sizeBytes": 78121143,
+      "command": "#(nop) ADD file:3077ee44db3cc7d38740d60a05c81418dd3825a007db473658464f52689e867b in / "
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:83f7e124b1cd00e1193e2761107b2a97e0f7f0343d8d5e8e28877d0fd370908c",
+      "sizeBytes": 62808424,
+      "command": "RUN /bin/sh -c set -eux;     apt-get update;     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends         curl         wget         gnupg         fontconfig         ca-certificates p11-kit         binutils         tzdata         locales     ;     echo \"en_US.UTF-8 UTF-8\" \u003e\u003e /etc/locale.gen;     locale-gen en_US.UTF-8;     rm -rf /var/lib/apt/lists/* # buildkit"
+    },
+    {
+      "index": 2,
+      "id": "blobs",
+      "digestId": "sha256:a5e42fffc30332b961bb8858bd80d9755b48ef01a37f941ece90204d13de29aa",
+      "sizeBytes": 279100006,
+      "command": "RUN /bin/sh -c set -eux;     ARCH=\"$(dpkg --print-architecture)\";     case \"${ARCH}\" in        amd64)          ESUM='992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_x64_linux_hotspot_17.0.17_10.tar.gz';          ;;        arm64)          ESUM='dc29ca6d35beb4419b4b00419b8a3dfbf5ae551e1ae2b046b516d9a579d04533';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.17_10.tar.gz';          ;;        armhf)          ESUM='a0129be48dfbd16b7c6a158bf9e91683be2e292c473085294a6d436bbc5f4ea9';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_arm_linux_hotspot_17.0.17_10.tar.gz';          ;;        ppc64el)          ESUM='2a29d1be61940c1bd639018c07f4622e1f145a7ef34e7294fee877e39226d9da';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_ppc64le_linux_hotspot_17.0.17_10.tar.gz';          ;;        riscv64)          ESUM='fba21763f6553efb65d774f51ab6a347e67a69eb2bb2d26980cdf2ee0f35a6db';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_riscv64_linux_hotspot_17.0.17_10.tar.gz';          ;;        s390x)          ESUM='76327b1d00c67f6be91717754fd85fc85ce496d48876f69accb9c53ed31dc546';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jdk_s390x_linux_hotspot_17.0.17_10.tar.gz';          ;;        *)          echo \"Unsupported arch: ${ARCH}\";          exit 1;          ;;     esac;     wget --progress=dot:giga -O /tmp/openjdk.tar.gz ${BINARY_URL};     wget --progress=dot:giga -O /tmp/openjdk.tar.gz.sig ${BINARY_URL}.sig;     export GNUPGHOME=\"$(mktemp -d)\";     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B;     gpg --batch --verify /tmp/openjdk.tar.gz.sig /tmp/openjdk.tar.gz;     rm -rf \"${GNUPGHOME}\" /tmp/openjdk.tar.gz.sig;     echo \"${ESUM} */tmp/openjdk.tar.gz\" | sha256sum -c -;     mkdir -p \"$JAVA_HOME\";     tar --extract         --file /tmp/openjdk.tar.gz         --directory \"$JAVA_HOME\"         --strip-components 1         --no-same-owner     ;     rm -f /tmp/openjdk.tar.gz ${JAVA_HOME}/lib/src.zip;     find \"$JAVA_HOME/lib\" -name '*.so' -exec dirname '{}' ';' | sort -u \u003e /etc/ld.so.conf.d/docker-openjdk.conf;     ldconfig;     java -Xshare:dump; # buildkit"
+    },
+    {
+      "index": 3,
+      "id": "blobs",
+      "digestId": "sha256:b0a9ce8e98a0159b1f570c6d715b0bd23872d8cb92f0cd741b9491a99946586f",
+      "sizeBytes": 0,
+      "command": "RUN /bin/sh -c set -eux;     echo \"Verifying install ...\";     fileEncoding=\"$(echo 'System.out.println(System.getProperty(\"file.encoding\"))' | jshell -s -)\"; [ \"$fileEncoding\" = 'UTF-8' ]; rm -rf ~/.java;     echo \"javac --version\"; javac --version;     echo \"java --version\"; java --version;     echo \"Complete.\" # buildkit"
+    },
+    {
+      "index": 4,
+      "id": "blobs",
+      "digestId": "sha256:d2907f42189f2348fd74d025b5c657c16923ea415a01e0fda97f8969865fb418",
+      "sizeBytes": 5309,
+      "command": "COPY --chmod=755 entrypoint.sh /__cacert_entrypoint.sh # buildkit"
+    },
+    {
+      "index": 5,
+      "id": "blobs",
+      "digestId": "sha256:587f43cd080803d85defe4cbaf0b7dd607737ca324120d7d05d99a86e4f2f3df",
+      "sizeBytes": 0,
+      "command": "WORKDIR /app"
+    },
+    {
+      "index": 6,
+      "id": "blobs",
+      "digestId": "sha256:e10e64f8049920c4f28afd9361d7385783114bcec162caca7858663ef43c3fd2",
+      "sizeBytes": 64018607,
+      "command": "COPY /app/build/libs/bookshelf.jar app.jar # buildkit"
+    },
+    {
+      "index": 7,
+      "id": "blobs",
+      "digestId": "sha256:c68cae9687ef5714b788bc48334a27dac115cdfc8db1e8d50e292ecba1736f85",
+      "sizeBytes": 4736,
+      "command": "RUN /bin/sh -c groupadd -r appgroup \u0026\u0026 useradd -r -g appgroup appuser # buildkit"
+    }
+  ],
+  "image": {
+    "sizeBytes": 484058225,
+    "inefficientBytes": 2108503,
+    "efficiencyScore": 0.9972797817865816,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 1313896,
+        "file": "/var/cache/debconf/templates.dat"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 386162,
+        "file": "/var/log/dpkg.log"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 231478,
+        "file": "/var/lib/dpkg/status"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 40333,
+        "file": "/var/log/apt/history.log"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 32768,
+        "file": "/tmp/hsperfdata_root/68"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 25697,
+        "file": "/var/cache/debconf/config.dat"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 21805,
+        "file": "/var/cache/ldconfig/aux-cache"
+      },
+      {
+        "count": 3,
+        "sizeBytes": 21453,
+        "file": "/etc/ld.so.cache"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 11036,
+        "file": "/var/log/apt/eipp.log.xz"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 9690,
+        "file": "/var/log/alternatives.log"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 2783,
+        "file": "/var/lib/apt/extended_states"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1990,
+        "file": "/var/lib/dpkg/diversions"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1817,
+        "file": "/etc/passwd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1727,
+        "file": "/etc/passwd-"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1026,
+        "file": "/etc/shadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1022,
+        "file": "/etc/group"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 976,
+        "file": "/etc/shadow-"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 937,
+        "file": "/etc/group-"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 871,
+        "file": "/etc/gshadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 793,
+        "file": "/etc/gshadow-"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 230,
+        "file": "/var/lib/dpkg/triggers/File"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 13,
+        "file": "/etc/default/locale"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/var/lib/dpkg/lock"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/etc/.pwd.lock"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/var/lib/dpkg/triggers/Lock"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/var/lib/dpkg/triggers/Unincorp"
+      }
+    ]
+  }
+}

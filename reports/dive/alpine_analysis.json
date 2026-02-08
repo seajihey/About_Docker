@@ -1,0 +1,512 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:cce92674e98722970ab3fdce76a2566f54db535beeb24f0b4397f070ab5f6987",
+      "sizeBytes": 8317404,
+      "command": "ADD alpine-minirootfs-3.22.3-x86_64.tar.gz / # buildkit"
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:c1cbd6f27944d92e369faa7b61bd059580146f8a4f57ba13a6158d56d75c9459",
+      "sizeBytes": 33270096,
+      "command": "RUN /bin/sh -c set -eux;     apk add --no-cache         fontconfig ttf-dejavu         gnupg         ca-certificates p11-kit-trust         musl-locales musl-locales-lang         tzdata         coreutils         openssl     ;     rm -rf /var/cache/apk/* # buildkit"
+    },
+    {
+      "index": 2,
+      "id": "blobs",
+      "digestId": "sha256:f1f31030581fa5dfcace67e8dc07d2860ad9fdc89bab4fbe9fa0aeb0b7d41171",
+      "sizeBytes": 139633965,
+      "command": "RUN /bin/sh -c set -eux;     ARCH=\"$(apk --print-arch)\";     case \"${ARCH}\" in        x86_64)          ESUM='6c3047e8edd3878e8d2a1cee95c04606042c6a55954ad365d20b58f88cc9ecd5';          BINARY_URL='https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.17%2B10/OpenJDK17U-jre_x64_alpine-linux_hotspot_17.0.17_10.tar.gz';          ;;        *)          echo \"Unsupported arch: ${ARCH}\";          exit 1;          ;;     esac;     wget -O /tmp/openjdk.tar.gz ${BINARY_URL};     wget -O /tmp/openjdk.tar.gz.sig ${BINARY_URL}.sig;     export GNUPGHOME=\"$(mktemp -d)\";     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B;     gpg --batch --verify /tmp/openjdk.tar.gz.sig /tmp/openjdk.tar.gz;     rm -rf \"${GNUPGHOME}\" /tmp/openjdk.tar.gz.sig;     echo \"${ESUM} */tmp/openjdk.tar.gz\" | sha256sum -c -;     mkdir -p \"$JAVA_HOME\";     tar --extract         --file /tmp/openjdk.tar.gz         --directory \"$JAVA_HOME\"         --strip-components 1         --no-same-owner     ;     rm -f /tmp/openjdk.tar.gz; # buildkit"
+    },
+    {
+      "index": 3,
+      "id": "blobs",
+      "digestId": "sha256:ef29822c0404649b3270215a7565c948ba82db2402ff35bee3fe6cbbcc29c1f1",
+      "sizeBytes": 0,
+      "command": "RUN /bin/sh -c set -eux;     echo \"Verifying install ...\";     echo \"java --version\"; java --version;     echo \"Complete.\" # buildkit"
+    },
+    {
+      "index": 4,
+      "id": "blobs",
+      "digestId": "sha256:03ae7f20762ff3cc5f9bd8eed61a85aa851096a68ee82d9af6b1d779b2f46f41",
+      "sizeBytes": 5307,
+      "command": "COPY --chmod=755 entrypoint.sh /__cacert_entrypoint.sh # buildkit"
+    },
+    {
+      "index": 5,
+      "id": "blobs",
+      "digestId": "sha256:926eb418313d57942324a80ca299612679435813cdf4fdf84af8bfa540b25213",
+      "sizeBytes": 0,
+      "command": "WORKDIR /app"
+    },
+    {
+      "index": 6,
+      "id": "blobs",
+      "digestId": "sha256:1246dbd7834766f172be6afa9f74c705628fd7138494b31734cc59e5a8cd2734",
+      "sizeBytes": 64018607,
+      "command": "COPY /app/build/libs/bookshelf.jar app.jar # buildkit"
+    },
+    {
+      "index": 7,
+      "id": "blobs",
+      "digestId": "sha256:b977a6a10328d530ab3b4e6a633cdef9921bb6884c90727783e095574f9208b8",
+      "sizeBytes": 3059,
+      "command": "RUN /bin/sh -c addgroup -S appgroup \u0026\u0026 adduser -S appuser -G appgroup # buildkit"
+    }
+  ],
+  "image": {
+    "sizeBytes": 245248438,
+    "inefficientBytes": 665067,
+    "efficiencyScore": 0.9982936364308261,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 438808,
+        "file": "/etc/ssl/certs/ca-certificates.crt"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 120368,
+        "file": "/lib/apk/db/installed"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 39456,
+        "file": "/usr/bin/env"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 35056,
+        "file": "/usr/bin/sha512sum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 27648,
+        "file": "/lib/apk/db/scripts.tar"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1451,
+        "file": "/etc/passwd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1043,
+        "file": "/etc/group"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 549,
+        "file": "/etc/shadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 426,
+        "file": "/lib/apk/db/triggers"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 262,
+        "file": "/etc/apk/world"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/unlink"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/uniq"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/unexpand"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/tty"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/truncate"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/tr"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/timeout"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/test"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/tee"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/tail"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/tac"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/cat"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/split"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/sort"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/shuf"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/shred"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/wc"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/sha256sum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/sha1sum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/seq"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/realpath"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/readlink"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/printf"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/paste"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/od"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/nproc"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/nohup"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/nl"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/mkfifo"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/md5sum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/install"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/id"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/who"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/stat"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/whoami"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/factor"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/expr"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/expand"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/yes"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/hostid"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/base64"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/sbin/chroot"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/du"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/dirname"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/cut"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/comm"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/cksum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/basename"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/["
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/uname"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/true"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/touch"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/sync"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/stty"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/head"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/sleep"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/rmdir"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/rm"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/pwd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/printenv"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/nice"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/mv"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/mktemp"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/mknod"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/mkdir"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/ls"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/ln"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/link"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/false"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/echo"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/df"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/dd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/date"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/cp"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/chown"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/chmod"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/bin/chgrp"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/sum"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/usr/bin/fold"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+========================================
+DIVE ANALYSIS COMPARISON SUMMARY
+Generated: Tue Feb  3 16:41:43 KST 2026
+========================================
+
+IMAGE                        SIZE   EFFICIENCY       WASTED
+-------------------- ------------ ------------ ------------
+basic                     742.7MB          N/A        0.0MB
+multistage                461.7MB          N/A        0.0MB
+jre                       311.7MB          N/A        0.0MB
+alpine                    233.9MB          N/A        0.0MB
+jlink                     121.6MB          N/A        0.0MB
+native                    172.7MB          N/A        0.0MB
+
+========================================
+Note: Install 'jq' for detailed metrics
+========================================

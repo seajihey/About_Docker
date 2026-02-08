@@ -1,0 +1,49 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Application
+application-*.yml
+!application-local.yml
+!application-docker.yml
+
+# Docker
+.docker/
+
+# Test
+/test-results/
+/test-output/
+
+# Dive tool (설치 파일)
+*.deb
+
+# Docker build artifacts
+CACHED
+
+# 임시/작업 파일
+exporting
+naming
+transferring
+writing
+[internal]
+
+# Scripts (재생성 가능)
+scripts/

@@ -1,0 +1,34 @@
+========================================
+DOCKERFILE ANALYSIS: Dockerfile.jlink
+========================================
+
+--- Stages ---
+8:FROM eclipse-temurin:17-jdk-alpine AS builder
+26:FROM eclipse-temurin:17-jdk-alpine AS jre-builder
+39:FROM alpine:3.19
+
+--- Key Instructions ---
+13:COPY gradlew .
+14:COPY gradle gradle
+15:RUN chmod +x ./gradlew
+18:COPY build.gradle settings.gradle ./
+19:RUN ./gradlew dependencies --no-daemon || true
+22:COPY src src
+23:RUN ./gradlew bootJar --no-daemon -x test
+30:RUN $JAVA_HOME/bin/jlink \
+46:RUN apk add --no-cache ca-certificates tzdata
+49:COPY --from=jre-builder /custom-jre /opt/java
+52:ENV JAVA_HOME=/opt/java
+53:ENV PATH="$JAVA_HOME/bin:$PATH"
+58:COPY --from=builder /app/build/libs/bookshelf.jar app.jar
+61:RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+65:ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UseStringDeduplication"
+67:EXPOSE 8080
+69:ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
+--- Statistics ---
+Total lines: 69
+FROM statements: 3
+RUN statements: 6
+COPY statements: 6
+

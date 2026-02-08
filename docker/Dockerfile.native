@@ -1,0 +1,61 @@
+# ==============================================================================
+# Stage 6: GraalVM Native Image (Optimized)
+# 예상 크기: ~170MB (최적화 전 337MB → 최적화 후 ~170MB)
+# 개선점: AOT 컴파일로 JVM 없이 실행 가능한 바이너리 생성
+# 
+# 보안: non-root 사용자로 실행 (컨테이너 보안 베스트 프랙티스)
+# 최적화: COPY --chown 사용으로 레이어 중복 방지
+# ==============================================================================
+
+# ----- Build Stage -----
+FROM ghcr.io/graalvm/native-image-community:17 AS builder
+
+# 1. 패키지 설치 (xargs 등 빌드에 필요한 도구)
+USER root
+RUN microdnf install -y findutils
+
+# 2. 작업 디렉토리 설정
+WORKDIR /app
+
+# 3. Gradle Wrapper 복사 및 권한 부여 (레이어 캐싱 활용)
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 4. 설정 파일 복사 및 의존성 다운로드 (변경 빈도 낮음 → 캐싱 효율)
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# 5. 소스 코드 복사 (변경 빈도 높음 → 마지막에 복사)
+COPY src src
+
+# 6. Native Image 빌드 실행
+RUN ./gradlew nativeCompile --no-daemon -x test
+
+# ----- Runtime Stage -----
+FROM alpine:3.19
+
+# 1. 필수 패키지 설치
+#    - ca-certificates: HTTPS 통신용 인증서
+#    - tzdata: 타임존 설정
+#    - gcompat: glibc 호환성 레이어 (GraalVM 바이너리 실행에 필요)
+RUN apk add --no-cache ca-certificates tzdata gcompat
+
+# 2. 보안: non-root 사용자 생성 (바이너리 복사 전에 생성)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# 3. 작업 디렉토리 설정
+WORKDIR /app
+
+# 4. 바이너리 복사 + 소유권 동시 설정 (단일 레이어!)
+#    ⚠️ 기존 문제: COPY 후 chown -R 실행 시 172MB 중복 저장 (효율성 51%)
+#    ✅ 해결책: COPY --chown으로 복사와 소유권 설정을 한 번에 처리
+COPY --chown=appuser:appgroup --from=builder \
+    /app/build/native/nativeCompile/bookshelf ./bookshelf
+
+# 5. non-root 사용자로 전환
+USER appuser
+
+# 6. 포트 노출 및 실행
+EXPOSE 8080
+ENTRYPOINT ["./bookshelf"]

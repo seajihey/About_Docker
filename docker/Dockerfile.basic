@@ -1,0 +1,25 @@
+# ==============================================================================
+# Stage 1: 기본 Dockerfile (비효율적 - 경량화 전 기준)
+# 예상 크기: ~650MB
+# ==============================================================================
+
+# JDK 전체 포함 (불필요한 개발 도구 포함)
+FROM eclipse-temurin:17-jdk
+
+LABEL maintainer="BookShelf Team"
+LABEL description="BookShelf API - Basic (Unoptimized)"
+LABEL version="1.0.0"
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# Gradle Wrapper 및 전체 소스 복사 (캐시 활용 X)
+COPY . .
+
+# 빌드 (테스트 포함, 캐시 미활용)
+RUN ./gradlew build -x test --no-daemon
+
+# JAR 파일 실행
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "build/libs/bookshelf.jar"]

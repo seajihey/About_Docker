@@ -1,0 +1,45 @@
+========================================
+DIVE ANALYSIS: bookshelf:jre
+========================================
+
+  Using default CI config
+[1mImage Source: [0mdocker://bookshelf:jre
+[1mFetching image...[0m (this can take a while for large images)
+[1mAnalyzing image...[0m
+  efficiency: 99.6018 %
+  wastedBytes: 2093266 bytes (2.1 MB)
+  userWastedPercent: 0.8416 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    2        1.3 MB  /var/cache/debconf/templates.dat
+    2        382 kB  /var/log/dpkg.log
+    2        224 kB  /var/lib/dpkg/status
+    2         40 kB  /var/log/apt/history.log
+    2         33 kB  /tmp/hsperfdata_root/66
+    2         26 kB  /var/cache/debconf/config.dat
+    3         21 kB  /var/cache/ldconfig/aux-cache
+    3         20 kB  /etc/ld.so.cache
+    2         11 kB  /var/log/apt/eipp.log.xz
+    2        9.7 kB  /var/log/alternatives.log
+    2        2.3 kB  /var/lib/apt/extended_states
+    2        2.0 kB  /var/lib/dpkg/diversions
+    2        1.8 kB  /etc/passwd
+    2        1.7 kB  /etc/passwd-
+    2        1.0 kB  /etc/shadow
+    2        1.0 kB  /etc/group
+    2         976 B  /etc/shadow-
+    2         937 B  /etc/group-
+    2         871 B  /etc/gshadow
+    2         793 B  /etc/gshadow-
+    2         230 B  /var/lib/dpkg/triggers/File
+    2          13 B  /etc/default/locale
+    2           0 B  /var/lib/dpkg/lock
+    2           0 B  /etc/.pwd.lock
+    2           0 B  /var/lib/dpkg/triggers/Lock
+    2           0 B  /var/lib/dpkg/triggers/Unincorp
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  [34mSKIP[0m: highestWastedBytes: rule disabled
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:2] [Failed:0] [Warn:0] [Skipped:1][0m
+

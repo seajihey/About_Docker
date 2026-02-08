@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: bookshelf-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bookshelf-network
+
+  # BookShelf API (기본 이미지 - 비교용)
+  app-basic:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.basic
+    container_name: bookshelf-basic
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8081:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - basic
+
+  # BookShelf API (멀티스테이지)
+  app-multistage:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.multistage
+    container_name: bookshelf-multistage
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8082:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - multistage
+
+  # BookShelf API (JRE Only)
+  app-jre:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.jre
+    container_name: bookshelf-jre
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8083:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - jre
+
+  # BookShelf API (Alpine)
+  app-alpine:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.alpine
+    container_name: bookshelf-alpine
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8084:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - alpine
+
+  # BookShelf API (Jlink)
+  app-jlink:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.jlink
+    container_name: bookshelf-jlink
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8085:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - jlink
+
+  # BookShelf API (Native)
+  app-native:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.native
+    container_name: bookshelf-native
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: bookshelf
+      MYSQL_USER: bookshelf
+      MYSQL_PASSWORD: bookshelf123
+    ports:
+      - "8086:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bookshelf-network
+    profiles:
+      - native
+
+networks:
+  bookshelf-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
